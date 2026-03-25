@@ -112,7 +112,7 @@ jobs:
         shell: pwsh
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: neuronprompter-windows-x64
           path: |
@@ -174,7 +174,7 @@ jobs:
         run: sha256sum neuronprompter-linux-x64 > neuronprompter-linux-x64.sha256
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: neuronprompter-linux-x64
           path: |
@@ -229,7 +229,7 @@ jobs:
         run: sha256sum neuronprompter-linux-x64-server > neuronprompter-linux-x64-server.sha256
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: neuronprompter-linux-x64-server
           path: |
@@ -283,7 +283,7 @@ jobs:
         run: sha256sum neuronprompter-linux-arm64 > neuronprompter-linux-arm64.sha256
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: neuronprompter-linux-arm64
           path: |
@@ -334,7 +334,7 @@ jobs:
         run: shasum -a 256 neuronprompter-macos-arm64 > neuronprompter-macos-arm64.sha256
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: neuronprompter-macos-arm64
           path: |
@@ -386,7 +386,7 @@ jobs:
         run: shasum -a 256 neuronprompter-macos-x64 > neuronprompter-macos-x64.sha256
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: neuronprompter-macos-x64
           path: |
