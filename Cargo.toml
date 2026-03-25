@@ -1,0 +1,150 @@
+# Root workspace manifest for the NeuronPrompter project.
+# Defines all workspace members, shared dependency versions, and feature flags.
+
+[workspace]
+members = [
+    "crates/neuronprompter-core",
+    "crates/neuronprompter-db",
+    "crates/neuronprompter-application",
+    "crates/neuronprompter-mcp",
+    "crates/neuronprompter-api",
+    "crates/neuronprompter-web",
+    "crates/neuronprompter",
+]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+authors = ["Felix Fritz"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/FF-TEC/NeuronPrompter"
+homepage = "https://neuronprompter.com"
+
+[workspace.lints.rust]
+warnings = "deny"
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+unwrap_used = "deny"
+expect_used = "warn"
+panic = "deny"
+todo = "deny"
+dbg_macro = "deny"
+print_stdout = "deny"
+print_stderr = "deny"
+doc_markdown = "allow"
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+missing_panics_doc = "allow"
+
+# Centralized dependency versions shared across all workspace members.
+[workspace.dependencies]
+# Internal crates
+neuronprompter-core = { path = "crates/neuronprompter-core" }
+neuronprompter-db = { path = "crates/neuronprompter-db" }
+neuronprompter-application = { path = "crates/neuronprompter-application" }
+neuronprompter-mcp = { path = "crates/neuronprompter-mcp" }
+neuronprompter-api = { path = "crates/neuronprompter-api" }
+neuronprompter-web = { path = "crates/neuronprompter-web" }
+
+# Serialization and configuration
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Successor to deprecated serde_yaml; pre-release versioning is upstream's choice.
+serde_yml = "0.0.12"
+
+# Error handling
+thiserror = "2"
+anyhow = "1"
+
+# Logging and diagnostics
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Date/time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Async runtime and HTTP server
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "signal", "net", "time"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+axum = "0.8"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "set-header"] }
+
+# CLI argument parsing with derive macros
+clap = { version = "4.5", features = ["derive"] }
+
+# SQLite database and connection pooling
+rusqlite = { version = "0.32", features = ["bundled", "backup", "chrono"] }
+r2d2 = "0.8"
+r2d2_sqlite = "0.25"
+
+# HTTP client for Ollama integration. Default features are disabled to prevent
+# pulling in both native-tls and rustls simultaneously (double TLS stacks).
+# Only rustls-tls is enabled to keep a single TLS implementation.
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+# Unique identifier generation
+uuid = { version = "1", features = ["v4"] }
+
+# Cross-platform "open URL in default browser"
+opener = "0.8"
+
+# Embeds compiled frontend assets into the binary at compile time
+rust-embed = "8"
+
+# MIME type detection for serving embedded static files
+mime_guess = "2"
+
+# SSE stream adapter for tokio broadcast channels
+tokio-stream = { version = "0.1", features = ["sync"] }
+
+# Additional axum response types (typed headers for SSE)
+axum-extra = { version = "0.12", features = ["typed-header"] }
+
+# Native OS window management (optional gui feature)
+tao = { version = "0.35", features = ["rwh_06"] }
+
+# WebView embedding (optional gui feature)
+wry = "0.55"
+
+# PNG decoding for splash screen and window icon
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+# Constant-time comparison for bearer token authentication
+subtle = "2"
+
+# Concurrent hash map for per-IP rate limiting and session storage
+dashmap = "6"
+
+# Cryptographic random number generation for session tokens
+rand = "0.10"
+
+# Semantic versioning parser
+semver = "1"
+
+# Regular expressions
+regex = "1"
+
+# URL parsing
+url = "2"
+
+# Test utilities
+tempfile = "3"
+
+# Optimize third-party dependencies in dev builds to reduce runtime overhead
+# (e.g. SQLite, image decoding) while keeping workspace crates at debug speed.
+[profile.dev.package."*"]
+opt-level = 1
+
+[profile.release]
+# Link-time optimization for smaller binary size and cross-crate inlining
+lto = "thin"
+# Single codegen unit for maximum optimization at the cost of compile time
+codegen-units = 1
+# Strip debug symbols from the release binary
+strip = true

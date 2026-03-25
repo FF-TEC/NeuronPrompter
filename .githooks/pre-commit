@@ -1,0 +1,298 @@
+#!/bin/bash
+# =============================================================================
+# NeuronPrompter Pre-Commit Hook
+#
+# Runs the full CI validation pipeline locally before allowing a commit.
+# Detects which file types are staged and executes only the relevant checks.
+#
+# Stages:
+#   0  -- LaTeX validation (when .tex files are staged)
+#   0b -- Documentation-code consistency (validate_schemas, validate_architecture,
+#          validate_tests) when .tex, .rs, .toml, .sql, or .py files are staged
+#   1  -- Rust static analysis (when .rs or .toml files are staged)
+#   1b -- Frontend lint, typecheck, and build (when .ts, .tsx, .css, .js, .html staged)
+#   2  -- Test execution (when code files are staged)
+#   3  -- Release check verification (cargo check --release, always runs)
+#
+# Environment variables:
+#   NEURONPROMPTER_QUICK_HOOK=1  Skips tests, running only formatting +
+#                                 linting + release check.
+#
+# Requirements: pdflatex, bibtex, cargo, rustfmt, clippy, node, npm
+# =============================================================================
+
+ERRORS=0
+FRONTEND_BUILT=0
+DOCS_DIR="docs/architecture"
+FRONTEND_DIR="crates/neuronprompter-web/frontend"
+
+# ---------------------------------------------------------------------------
+# Detect staged file types to determine which checks to run
+# ---------------------------------------------------------------------------
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null)
+
+HAS_TEX=0
+HAS_RUST=0
+HAS_FRONTEND=0
+HAS_SQL=0
+HAS_VALIDATION_PY=0
+
+for file in $STAGED_FILES; do
+    case "$file" in
+        *.tex)                             HAS_TEX=1 ;;
+        *.rs|*.toml)                       HAS_RUST=1 ;;
+        *.ts|*.tsx|*.css|*.js|*.html)      HAS_FRONTEND=1 ;;
+        *.sql)                             HAS_SQL=1 ;;
+        tools/ci/*.py)                     HAS_VALIDATION_PY=1 ;;
+    esac
+done
+
+# SQL migrations affect Rust tests
+if [ "$HAS_SQL" -eq 1 ]; then
+    HAS_RUST=1
+fi
+
+# ---------------------------------------------------------------------------
+# Stage 0: LaTeX Validation
+# ---------------------------------------------------------------------------
+if [ "$HAS_TEX" -eq 1 ]; then
+    echo "=== Stage 0: LaTeX Validation ==="
+
+    if ! command -v pdflatex &> /dev/null; then
+        echo "ERROR: pdflatex is not installed or not in PATH."
+        exit 1
+    fi
+
+    clean_latex_artifacts() {
+        if [ -d "$DOCS_DIR" ]; then
+            pushd "$DOCS_DIR" > /dev/null 2>&1
+            for f in *; do
+                case "$f" in
+                    *.tex|*.bib|*.pdf) ;;
+                    *) [ -f "$f" ] && rm -f "$f" ;;
+                esac
+            done
+            popd > /dev/null 2>&1
+        fi
+    }
+    trap clean_latex_artifacts EXIT
+
+    for tex_file in "$DOCS_DIR"/*.tex; do
+        [ -f "$tex_file" ] || continue
+        base=$(basename "$tex_file" .tex)
+        echo "  Checking $base.tex ..."
+        pushd "$DOCS_DIR" > /dev/null
+
+        if ! pdflatex -interaction=nonstopmode -halt-on-error "$base.tex" > /dev/null 2>&1; then
+            echo "  FAIL: Compilation error in $base.tex"
+            if [ -f "$base.log" ]; then
+                grep -A2 "^!" "$base.log" 2>/dev/null || true
+            fi
+            ERRORS=1
+            popd > /dev/null
+            continue
+        fi
+
+        has_bib=0
+        for bib in *.bib; do
+            [ -f "$bib" ] && has_bib=1 && break
+        done
+
+        if [ "$has_bib" -eq 1 ]; then
+            bibtex "$base" > /dev/null 2>&1 || true
+            pdflatex -interaction=nonstopmode "$base.tex" > /dev/null 2>&1
+            pdflatex -interaction=nonstopmode "$base.tex" > /dev/null 2>&1
+        else
+            pdflatex -interaction=nonstopmode "$base.tex" > /dev/null 2>&1
+        fi
+
+        if [ -f "$base.log" ]; then
+            overfull_count=$(grep -c "Overfull" "$base.log" 2>/dev/null || true)
+            overfull_count=${overfull_count:-0}
+            if [ "$overfull_count" -gt 0 ]; then
+                echo "  REJECT: $overfull_count overfull box(es) in $base.tex"
+                grep "Overfull" "$base.log"
+                ERRORS=1
+            fi
+            if grep -q "LaTeX Warning.*undefined references" "$base.log" 2>/dev/null; then
+                echo "  REJECT: Undefined references in $base.tex"
+                ERRORS=1
+            fi
+            if grep -q "Citation.*undefined" "$base.log" 2>/dev/null; then
+                echo "  REJECT: Undefined citation(s) in $base.tex"
+                ERRORS=1
+            fi
+        fi
+        popd > /dev/null
+    done
+
+    for pdf in "$DOCS_DIR"/*.pdf; do
+        [ -f "$pdf" ] && git add "$pdf"
+    done
+    echo "  LaTeX validation completed."
+fi
+
+# ---------------------------------------------------------------------------
+# Stage 0b: Documentation-Code Consistency Validation
+# ---------------------------------------------------------------------------
+if [ "$HAS_TEX" -eq 1 ] || [ "$HAS_RUST" -eq 1 ] || [ "$HAS_SQL" -eq 1 ] || [ "$HAS_VALIDATION_PY" -eq 1 ]; then
+    echo "=== Stage 0b: Documentation-Code Consistency ==="
+
+    TEX_FILE="docs/architecture/architecture.tex"
+    SQL_FILE="migrations/0001_initial.sql"
+
+    if [ -f "$TEX_FILE" ]; then
+        if [ -f "$SQL_FILE" ]; then
+            echo "  Running validate_schemas.py ..."
+            if ! python tools/ci/validate_schemas.py --tex "$TEX_FILE" --sql "$SQL_FILE" 2>&1; then
+                echo "  REJECT: Schema-documentation consistency check failed."
+                ERRORS=1
+            fi
+        fi
+
+        echo "  Running validate_architecture.py ..."
+        if ! python tools/ci/validate_architecture.py --tex "$TEX_FILE" --root . 2>&1; then
+            echo "  REJECT: Architecture-documentation consistency check failed."
+            ERRORS=1
+        fi
+
+        echo "  Running validate_tests.py ..."
+        if ! python tools/ci/validate_tests.py --tex "$TEX_FILE" --root . 2>&1; then
+            echo "  REJECT: Test catalog consistency check failed."
+            ERRORS=1
+        fi
+
+        echo "  Documentation-code consistency checks completed."
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# Stage 1: Rust Static Analysis
+# ---------------------------------------------------------------------------
+if [ "$HAS_RUST" -eq 1 ]; then
+    echo "=== Stage 1: Rust Static Analysis ==="
+
+    echo "  Running cargo fmt --check ..."
+    if ! cargo fmt --all --check 2>&1; then
+        echo "  REJECT: Rust formatting violations found. Run 'cargo fmt --all' to fix."
+        ERRORS=1
+    fi
+
+    echo "  Running cargo clippy ..."
+    if ! cargo clippy --workspace --all-targets -- -D warnings 2>&1; then
+        echo "  REJECT: Clippy warnings found."
+        ERRORS=1
+    fi
+
+    echo "  Running cargo doc ..."
+    if ! RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps 2>&1; then
+        echo "  REJECT: Documentation build failed."
+        ERRORS=1
+    fi
+
+    if command -v cargo-deny &> /dev/null; then
+        echo "  Running cargo deny check ..."
+        if ! cargo deny check 2>&1; then
+            echo "  REJECT: Dependency audit failed."
+            ERRORS=1
+        fi
+    else
+        echo "  WARN: cargo-deny not installed -- dependency audit skipped" >&2
+        echo "  Install with: cargo install cargo-deny"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# Stage 1b: Frontend Lint, Typecheck, and Build (SolidJS)
+#
+# Runs ESLint, TypeScript type checking, and the Vite production build on
+# the SolidJS frontend. Lint and typecheck run before build so that type
+# errors and lint violations are caught before spending time on bundling.
+# ---------------------------------------------------------------------------
+if [ "$HAS_FRONTEND" -eq 1 ]; then
+    echo "=== Stage 1b: Frontend Lint, Typecheck, and Build ==="
+    if [ -d "$FRONTEND_DIR" ] && [ -f "$FRONTEND_DIR/package.json" ]; then
+        echo "  Running npm run lint ..."
+        if ! (cd "$FRONTEND_DIR" && npm run lint 2>&1); then
+            echo "  REJECT: Frontend lint failed."
+            ERRORS=1
+        fi
+
+        echo "  Running npm run typecheck ..."
+        if ! (cd "$FRONTEND_DIR" && npm run typecheck 2>&1); then
+            echo "  REJECT: Frontend typecheck failed."
+            ERRORS=1
+        fi
+
+        echo "  Running npm run build ..."
+        if ! (cd "$FRONTEND_DIR" && npm run build 2>&1); then
+            echo "  REJECT: Frontend build failed."
+            ERRORS=1
+        else
+            FRONTEND_BUILT=1
+        fi
+    else
+        echo "  SKIP: $FRONTEND_DIR not found"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# Stage 2: Test Execution (skipped in quick mode)
+# ---------------------------------------------------------------------------
+if [ "${NEURONPROMPTER_QUICK_HOOK:-0}" -eq 1 ]; then
+    echo "=== QUICK MODE: Skipping tests ==="
+else
+    if [ "$HAS_RUST" -eq 1 ]; then
+        echo "=== Stage 2: Rust Tests ==="
+        echo "  Running cargo test ..."
+        if ! RUST_BACKTRACE=1 cargo test --workspace 2>&1; then
+            echo "  REJECT: Rust tests failed."
+            ERRORS=1
+        fi
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# Stage 3: Release Build Verification (runs on EVERY commit)
+#
+# Runs a full cargo build in release mode unconditionally to verify that the
+# complete binary can be assembled, including code generation, linking, and
+# embedding of frontend assets via rust-embed. This catches issues that cargo
+# check alone would miss (e.g. linker errors, missing native libraries, broken
+# embedded assets). The frontend build runs first so rust-embed picks up fresh
+# dist/ assets. This stage is NOT gated on file type detection because even
+# non-code changes (documentation, configuration) must not break the release.
+# ---------------------------------------------------------------------------
+# Build frontend first so rust-embed picks up fresh dist/
+if [ "$FRONTEND_BUILT" -eq 0 ] && [ -d "$FRONTEND_DIR" ] && [ -f "$FRONTEND_DIR/package.json" ]; then
+    echo "=== Stage 3: Frontend Build ==="
+    echo "  Running npm run build ..."
+    if ! (cd "$FRONTEND_DIR" && npm run build 2>&1); then
+        echo "  REJECT: Frontend build failed."
+        ERRORS=1
+    else
+        FRONTEND_BUILT=1
+    fi
+fi
+
+echo "=== Stage 3: Release Build ==="
+echo "  Running cargo build --release ..."
+if ! cargo build --workspace --release 2>&1; then
+    echo "  REJECT: Release build failed."
+    ERRORS=1
+fi
+
+# ---------------------------------------------------------------------------
+# Final verdict
+# ---------------------------------------------------------------------------
+if [ "$ERRORS" -ne 0 ]; then
+    echo ""
+    echo "============================================================"
+    echo "Commit rejected. Fix the issues listed above before committing."
+    echo ""
+    exit 1
+fi
+
+echo ""
+echo "All pre-commit checks passed."
+exit 0

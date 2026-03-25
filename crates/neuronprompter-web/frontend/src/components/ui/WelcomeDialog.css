@@ -1,0 +1,382 @@
+/* =============================================================================
+   WelcomeDialog: First-run setup overlay.
+   Uses the same glass-morphism design language as ModalDialog.
+   Includes a titlebar drag region so the native window can be moved.
+   ============================================================================= */
+
+.welcome-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+}
+
+/* -- Titlebar (drag region + window controls) ------------------------------ */
+
+.welcome-titlebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  z-index: 1001;
+  -webkit-app-region: drag;
+  cursor: grab;
+}
+
+.welcome-titlebar-controls {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.welcome-win-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.welcome-win-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.welcome-win-btn-close:hover {
+  background: var(--color-error);
+  color: #fff;
+}
+
+.welcome-surface {
+  width: 90%;
+  max-width: 520px;
+  max-height: 90vh;
+  border-radius: var(--radius-lg);
+  background: rgba(15, 22, 42, 0.92);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(168, 85, 247, 0.08);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+[data-theme="light"] .welcome-surface {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* -- Header ---------------------------------------------------------------- */
+
+.welcome-header {
+  padding: var(--space-xl) var(--space-xl) var(--space-md);
+  text-align: center;
+}
+
+.welcome-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-sm);
+  background: linear-gradient(135deg, var(--accent-purple-light), var(--accent-cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.welcome-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 400px;
+  margin-inline: auto;
+}
+
+.welcome-privacy {
+  margin-top: var(--space-sm);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* -- Sections -------------------------------------------------------------- */
+
+.welcome-section {
+  padding: 0 var(--space-xl) var(--space-md);
+}
+
+.welcome-section-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 var(--space-xs);
+}
+
+.welcome-section-hint {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-md);
+  line-height: 1.5;
+}
+
+/* -- Form fields ----------------------------------------------------------- */
+
+.welcome-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.welcome-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.welcome-label {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.welcome-input {
+  height: 40px;
+  padding: 0 var(--space-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-family: var(--font-family);
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.welcome-input:focus {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.15);
+}
+
+.welcome-input-error {
+  border-color: var(--color-error);
+}
+
+.welcome-input-error:focus {
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+}
+
+.welcome-field-error {
+  font-size: var(--font-size-xs);
+  color: var(--color-error);
+}
+
+.welcome-field-hint {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+/* -- Dependency probes ----------------------------------------------------- */
+
+.welcome-probes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.welcome-probe-loading {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  padding: var(--space-sm) 0;
+}
+
+.welcome-probe-row {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+}
+
+.welcome-probe-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: 2px;
+}
+
+.welcome-probe-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.welcome-probe-dot-ok {
+  background: var(--color-success);
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
+}
+
+.welcome-probe-dot-off {
+  background: var(--text-muted);
+}
+
+.welcome-probe-name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.welcome-probe-badge {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+}
+
+.welcome-probe-detail {
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.welcome-probe-ok-text {
+  font-size: var(--font-size-xs);
+  color: var(--color-success);
+}
+
+.welcome-probe-hint {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.welcome-probe-link {
+  font-size: var(--font-size-xs);
+  color: var(--accent-purple-light);
+  text-decoration: none;
+}
+
+.welcome-probe-link:hover {
+  text-decoration: underline;
+}
+
+/* -- Data directory -------------------------------------------------------- */
+
+.welcome-data-dir {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-xl);
+  color: var(--text-muted);
+}
+
+.welcome-data-path {
+  font-size: var(--font-size-xs);
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+  opacity: 0.7;
+}
+
+/* -- Error ----------------------------------------------------------------- */
+
+.welcome-error {
+  margin: 0 var(--space-xl);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--color-error);
+  font-size: var(--font-size-xs);
+}
+
+/* -- Footer ---------------------------------------------------------------- */
+
+.welcome-footer {
+  padding: var(--space-md) var(--space-xl) var(--space-xl);
+  display: flex;
+  justify-content: center;
+}
+
+.welcome-button {
+  height: 44px;
+  padding: 0 var(--space-xl);
+  border: none;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-purple-deep));
+  color: #fff;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.3);
+  min-width: 180px;
+}
+
+.welcome-button:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(168, 85, 247, 0.4);
+}
+
+.welcome-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.welcome-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* -- Checkbox ---------------------------------------------------------------- */
+
+.welcome-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.welcome-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-purple);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.welcome-checkbox-hint {
+  padding-left: 24px;
+}

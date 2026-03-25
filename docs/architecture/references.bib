@@ -1,0 +1,260 @@
+% =============================================================================
+% NeuronPrompter -- Bibliography for the Technical Architecture Specification
+% Contains references to frameworks, libraries, standards, and design
+% literature cited in the architecture document.
+% =============================================================================
+
+% ---------------------------------------------------------------------------
+% Frameworks and Runtime
+% ---------------------------------------------------------------------------
+
+@misc{tauri,
+  author       = {{Tauri Contributors}},
+  title        = {Tauri -- Build Smaller, Faster, and More Secure Desktop and Mobile Applications},
+  year         = {2024},
+  url          = {https://tauri.app},
+  note         = {Version 2.x, accessed 2026}
+}
+
+@misc{tao,
+  author       = {{Tauri Contributors}},
+  title        = {tao -- Cross-Platform Window Creation Library},
+  year         = {2023},
+  url          = {https://github.com/tauri-apps/tao},
+  note         = {Underlying windowing library used by Tauri}
+}
+
+@misc{wry,
+  author       = {{Tauri Contributors}},
+  title        = {wry -- Cross-Platform WebView Rendering Library},
+  year         = {2023},
+  url          = {https://github.com/tauri-apps/wry},
+  note         = {WebView abstraction layer used by Tauri}
+}
+
+% ---------------------------------------------------------------------------
+% Programming Languages and Toolchains
+% ---------------------------------------------------------------------------
+
+@book{rust_book,
+  author       = {Steve Klabnik and Carol Nichols},
+  title        = {The Rust Programming Language},
+  edition      = {2nd},
+  publisher    = {No Starch Press},
+  year         = {2023},
+  isbn         = {978-1-7185-0310-6}
+}
+
+@misc{rust_api_guidelines,
+  author       = {{Rust Language Team}},
+  title        = {Rust API Guidelines},
+  year         = {2024},
+  url          = {https://rust-lang.github.io/api-guidelines/},
+  note         = {Conventions for idiomatic Rust library design}
+}
+
+@misc{typescript,
+  author       = {{Microsoft}},
+  title        = {TypeScript -- Typed JavaScript at Any Scale},
+  year         = {2024},
+  url          = {https://www.typescriptlang.org},
+  note         = {Version 5.x}
+}
+
+% ---------------------------------------------------------------------------
+% Frontend Framework
+% ---------------------------------------------------------------------------
+
+@misc{svelte,
+  author       = {Rich Harris and {Svelte Contributors}},
+  title        = {Svelte -- Cybernetically Enhanced Web Apps},
+  year         = {2024},
+  url          = {https://svelte.dev},
+  note         = {Version 5 with runes reactivity model}
+}
+
+% ---------------------------------------------------------------------------
+% Database
+% ---------------------------------------------------------------------------
+
+@misc{sqlite,
+  author       = {D. Richard Hipp},
+  title        = {SQLite -- A Self-Contained, Serverless SQL Database Engine},
+  year         = {2024},
+  url          = {https://www.sqlite.org},
+  note         = {Version 3.x with FTS5 and WAL support}
+}
+
+@misc{rusqlite,
+  author       = {{rusqlite Contributors}},
+  title        = {rusqlite -- Ergonomic Bindings to SQLite for Rust},
+  year         = {2024},
+  url          = {https://github.com/rusqlite/rusqlite},
+  note         = {Provides safe Rust wrappers around the SQLite C API}
+}
+
+% ---------------------------------------------------------------------------
+% Rust Crates (Application-Level)
+% ---------------------------------------------------------------------------
+
+@misc{serde,
+  author       = {David Tolnay},
+  title        = {serde -- Serialization Framework for Rust},
+  year         = {2024},
+  url          = {https://serde.rs},
+  note         = {Derive-based serialization and deserialization}
+}
+
+@misc{anyhow,
+  author       = {David Tolnay},
+  title        = {anyhow -- Flexible Concrete Error Type for Rust},
+  year         = {2024},
+  url          = {https://github.com/dtolnay/anyhow}
+}
+
+@misc{thiserror,
+  author       = {David Tolnay},
+  title        = {thiserror -- Derive Macro for the Standard Library Error Trait},
+  year         = {2024},
+  url          = {https://github.com/dtolnay/thiserror}
+}
+
+@misc{tracing,
+  author       = {{Tokio Contributors}},
+  title        = {tracing -- Application-Level Tracing for Rust},
+  year         = {2024},
+  url          = {https://github.com/tokio-rs/tracing}
+}
+
+@misc{arboard,
+  author       = {{arboard Contributors}},
+  title        = {arboard -- Cross-Platform Clipboard Access for Rust},
+  year         = {2024},
+  url          = {https://github.com/1Password/arboard}
+}
+
+@misc{directories,
+  author       = {{directories-rs Contributors}},
+  title        = {directories -- Platform-Specific Standard Directory Paths},
+  year         = {2024},
+  url          = {https://github.com/dirs-dev/directories-rs}
+}
+
+% ---------------------------------------------------------------------------
+% Software Architecture Literature
+% ---------------------------------------------------------------------------
+
+@book{clean_architecture,
+  author       = {Robert C. Martin},
+  title        = {Clean Architecture: A Craftsman's Guide to Software Structure and Design},
+  publisher    = {Prentice Hall},
+  year         = {2017},
+  isbn         = {978-0-13-449416-6}
+}
+
+@book{ddd_evans,
+  author       = {Eric Evans},
+  title        = {Domain-Driven Design: Tackling Complexity in the Heart of Software},
+  publisher    = {Addison-Wesley},
+  year         = {2003},
+  isbn         = {978-0-321-12521-7}
+}
+
+% ---------------------------------------------------------------------------
+% Integration Protocols and Local AI
+% ---------------------------------------------------------------------------
+
+@misc{mcp_spec,
+  author       = {{Anthropic}},
+  title        = {Model Context Protocol -- Open Standard for AI-Tool Integration},
+  year         = {2024},
+  url          = {https://modelcontextprotocol.io},
+  note         = {Specification version 2024-11-05}
+}
+
+@misc{mcp_rust_sdk,
+  author       = {{Anthropic}},
+  title        = {MCP Rust SDK -- Official Rust Implementation of the Model Context Protocol},
+  year         = {2025},
+  url          = {https://github.com/modelcontextprotocol/rust-sdk},
+  note         = {Provides server and client abstractions for MCP in Rust}
+}
+
+@misc{ollama,
+  author       = {{Ollama Inc.}},
+  title        = {Ollama -- Run Large Language Models Locally},
+  year         = {2024},
+  url          = {https://ollama.com},
+  note         = {Local LLM inference server with HTTP API on port 11434}
+}
+
+@misc{reqwest,
+  author       = {Sean McArthur},
+  title        = {reqwest -- An Ergonomic HTTP Client for Rust},
+  year         = {2024},
+  url          = {https://github.com/seanmonstar/reqwest},
+  note         = {Async and blocking HTTP client with JSON support}
+}
+
+@inproceedings{sqlite_paper,
+  author       = {D. Richard Hipp},
+  title        = {SQLite: Past, Present, and Future},
+  booktitle    = {Proceedings of the VLDB Endowment},
+  volume       = {15},
+  number       = {12},
+  pages        = {3535--3547},
+  year         = {2022},
+  doi          = {10.14778/3554821.3554842}
+}
+
+% ---------------------------------------------------------------------------
+% Testing Frameworks and Tools
+% ---------------------------------------------------------------------------
+
+@misc{vitest,
+  author       = {{Vitest Contributors}},
+  title        = {Vitest -- A Vite-Native Unit Test Framework},
+  year         = {2024},
+  url          = {https://vitest.dev},
+  note         = {Fast unit test runner compatible with Vite build pipelines}
+}
+
+@misc{svelte_testing_library,
+  author       = {{Testing Library Contributors}},
+  title        = {Svelte Testing Library -- Simple and Complete Testing Utilities for Svelte},
+  year         = {2024},
+  url          = {https://testing-library.com/docs/svelte-testing-library/intro},
+  note         = {DOM testing utilities following the Testing Library philosophy}
+}
+
+@misc{playwright,
+  author       = {{Microsoft}},
+  title        = {Playwright -- Reliable End-to-End Testing for Modern Web Apps},
+  year         = {2024},
+  url          = {https://playwright.dev},
+  note         = {Cross-browser automation framework with WebDriver protocol support}
+}
+
+@misc{tauri_webdriver,
+  author       = {{Tauri Contributors}},
+  title        = {Tauri WebDriver -- End-to-End Testing for Tauri Applications},
+  year         = {2024},
+  url          = {https://tauri.app/develop/tests/webdriver/},
+  note         = {WebDriver bridge enabling automated UI testing of Tauri applications}
+}
+
+@misc{criterion,
+  author       = {Brook Heisler},
+  title        = {Criterion.rs -- Statistics-Driven Benchmarking Library for Rust},
+  year         = {2024},
+  url          = {https://github.com/bheisler/criterion.rs},
+  note         = {Provides statistical analysis, regression detection, and HTML reports}
+}
+
+@misc{cargo_deny,
+  author       = {{EmbarkStudios}},
+  title        = {cargo-deny -- Lint Your Dependencies},
+  year         = {2024},
+  url          = {https://github.com/EmbarkStudios/cargo-deny},
+  note         = {Audits dependency licenses, advisories, and duplicate crate versions}
+}

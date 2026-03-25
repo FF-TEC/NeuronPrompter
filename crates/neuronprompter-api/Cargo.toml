@@ -1,0 +1,66 @@
+# neuronprompter-api: The axum-based REST API server with shared application
+# state, route definitions, request/response types, and middleware.
+
+[package]
+name = "neuronprompter-api"
+description = "REST API server for the NeuronPrompter workspace"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+# Internal workspace crates
+neuronprompter-core = { workspace = true }
+neuronprompter-db = { workspace = true }
+neuronprompter-application = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+
+# Structured logging
+tracing = { workspace = true }
+
+# Async runtime and HTTP server
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+
+# Serialization for JSON request/response bodies
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Direct pool dependencies required because AppState holds DbPool type directly.
+# A future refactor would re-export pool types from neuronprompter-db.
+r2d2 = { workspace = true }
+r2d2_sqlite = { workspace = true }
+rusqlite = { workspace = true }
+
+# Date/time formatting
+chrono = { workspace = true }
+
+# HTTP client (needed for OllamaState reqwest::Client type)
+reqwest = { workspace = true }
+
+# Unique identifier generation
+uuid = { workspace = true }
+
+# Constant-time byte comparison for bearer token authentication
+subtle = { workspace = true }
+
+# Concurrent hash map for per-IP rate limiting and session storage
+dashmap = { workspace = true }
+
+# Cryptographic random session token generation
+rand = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+tower = { workspace = true, features = ["util"] }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

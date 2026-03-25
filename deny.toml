@@ -1,0 +1,114 @@
+# =============================================================================
+# cargo-deny configuration for NeuronPrompter.
+#
+# Audits dependency licenses against an allow-list, checks for known security
+# advisories from the RustSec database, and detects duplicate crate versions.
+# =============================================================================
+
+[advisories]
+db-path = "~/.cargo/advisory-db"
+db-urls = ["https://github.com/rustsec/advisory-db"]
+ignore = [
+    # GTK3/glib "unmaintained" advisories -- these crates are transitive
+    # dependencies of tao 0.34 and wry 0.54 (native GUI feature). The gtk-rs
+    # team migrated to gtk4-rs; the GTK3 bindings still work but receive no
+    # new features. Tracking upstream tao/wry migration to gtk4.
+    # Reviewed: 2026-03-25
+    "RUSTSEC-2024-0370",
+    "RUSTSEC-2024-0411",
+    "RUSTSEC-2024-0412",
+    "RUSTSEC-2024-0413",
+    "RUSTSEC-2024-0414",
+    "RUSTSEC-2024-0415",
+    "RUSTSEC-2024-0416",
+    "RUSTSEC-2024-0417",
+    "RUSTSEC-2024-0418",
+    "RUSTSEC-2024-0419",
+    "RUSTSEC-2024-0420",
+    "RUSTSEC-2024-0436",
+]
+
+[licenses]
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "ISC",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "Unicode-3.0",
+    "Zlib",
+    "BSL-1.0",
+    "Unicode-DFS-2016",
+    "OpenSSL",
+    "MPL-2.0",
+    "CDLA-Permissive-2.0",
+]
+confidence-threshold = 0.8
+
+[bans]
+multiple-versions = "deny"
+# Workspace path dependencies use wildcard versions by design.
+wildcards = "allow"
+workspace-default-features = "allow"
+external-default-features = "allow"
+skip = [
+    # Widely-used crates that legitimately have multiple major versions in the
+    # dependency tree due to transitive dependencies from tao, wry, gtk, and
+    # windows ecosystem crates. Entries are the result of `cargo deny check bans`.
+    { crate = "syn@1" },
+    { crate = "bitflags@1" },
+    { crate = "hashbrown@0.14" },
+    # hashbrown 0.15 is pulled by multiple transitive dependencies at different
+    # minor versions (e.g. indexmap, dashmap). Both 0.14 and 0.15 coexist in
+    # the resolved dependency tree.
+    { crate = "hashbrown@0.15" },
+    # GTK/tao/wry ecosystem pulls in older versions alongside newer ones
+    { crate = "core-foundation@0.9" },
+    { crate = "foreign-types@0.3" },
+    { crate = "foreign-types-shared@0.1" },
+    # Crypto/random crates with split major versions across dependencies
+    { crate = "cpufeatures@0.2" },
+    { crate = "getrandom@0.2" },
+    { crate = "getrandom@0.3" },
+    { crate = "rand@0.9" },
+    { crate = "rand_core@0.9" },
+    # Macro/build utility crates with coexisting major versions
+    { crate = "heck@0.4" },
+    { crate = "proc-macro-crate@1" },
+    { crate = "proc-macro-crate@2" },
+    { crate = "toml@0.5" },
+    { crate = "toml@0.8" },
+    { crate = "serde_spanned@0.6" },
+    { crate = "toml_datetime@0.6" },
+    { crate = "toml_edit@0.19" },
+    { crate = "toml_edit@0.20" },
+    { crate = "winnow@0.5" },
+    { crate = "winnow@0.7" },
+    # thiserror v1 pulled by transitive dependencies alongside v2
+    { crate = "thiserror@1" },
+    { crate = "thiserror-impl@1" },
+    # Windows platform crates with coexisting versions from tao/wry/windows
+    { crate = "windows-core@0.61" },
+    { crate = "windows-link@0.1" },
+    { crate = "windows-result@0.3" },
+    { crate = "windows-strings@0.4" },
+    { crate = "windows-sys@0.45" },
+    { crate = "windows-sys@0.52" },
+    { crate = "windows-sys@0.59" },
+    { crate = "windows-targets@0.52" },
+    { crate = "r-efi@5" },
+    { crate = "windows_aarch64_gnullvm@0.52" },
+    { crate = "windows_aarch64_msvc@0.52" },
+    { crate = "windows_i686_gnu@0.52" },
+    { crate = "windows_i686_msvc@0.52" },
+    { crate = "windows_x86_64_gnu@0.52" },
+    { crate = "windows_x86_64_gnullvm@0.52" },
+    { crate = "windows_x86_64_msvc@0.52" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

@@ -1,0 +1,53 @@
+name: Documentation Validation
+
+on:
+  push:
+    paths:
+      - 'docs/**'
+      - 'migrations/**'
+      - 'crates/**/*.rs'
+      - 'crates/**/Cargo.toml'
+      - 'Cargo.toml'
+      - 'tools/ci/**'
+      - 'tests/**'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'migrations/**'
+      - 'crates/**/*.rs'
+      - 'crates/**/Cargo.toml'
+      - 'Cargo.toml'
+      - 'tools/ci/**'
+      - 'tests/**'
+
+jobs:
+  doc-validation:
+    name: Documentation-Code Consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Validate schema documentation
+        run: |
+          python tools/ci/validate_schemas.py \
+            --tex docs/architecture/architecture.tex \
+            --sql migrations/0001_initial.sql \
+            --json
+
+      - name: Validate architecture documentation
+        run: |
+          python tools/ci/validate_architecture.py \
+            --tex docs/architecture/architecture.tex \
+            --root . \
+            --json
+
+      - name: Validate test catalog
+        run: |
+          python tools/ci/validate_tests.py \
+            --tex docs/architecture/architecture.tex \
+            --root . \
+            --json

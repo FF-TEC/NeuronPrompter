@@ -1,0 +1,61 @@
+.copy-to-user-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.copy-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 100;
+  min-width: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 4px;
+  padding: 4px 0;
+  background: var(--bg-elevated, #2a2a2a);
+  border: 1px solid var(--border-color, #444);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.copy-dropdown-header {
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted, #999);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.copy-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  color: var(--text-primary, #eee);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.copy-dropdown-item:hover {
+  background: var(--bg-hover, #333);
+}
+
+.copy-dropdown-username {
+  color: var(--text-muted, #888);
+  font-size: 11px;
+  margin-left: auto;
+}
+
+.copy-dropdown-empty {
+  padding: 12px;
+  color: var(--text-muted, #888);
+  font-size: 12px;
+  text-align: center;
+}

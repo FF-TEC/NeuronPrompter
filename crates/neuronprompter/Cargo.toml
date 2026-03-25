@@ -1,0 +1,79 @@
+# neuronprompter: The main binary crate and entry point for the NeuronPrompter
+# application. Parses CLI arguments via clap to determine the execution mode
+# (web, serve, mcp, version). When invoked without a subcommand, defaults to
+# web UI mode which starts the axum server with the embedded SolidJS frontend
+# and opens the default browser.
+
+[package]
+name = "neuronprompter"
+description = "NeuronPrompter: AI prompt management and organization tool"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "neuronprompter"
+path = "src/main.rs"
+
+[features]
+default = ["web", "gui", "mcp"]
+# The web feature compiles in the browser-based frontend.
+web = ["dep:neuronprompter-web"]
+# The gui feature compiles in tao (native window) and wry (WebView) through
+# neuronprompter-web. When disabled, the default browser is opened instead.
+# The opener dependency is gated behind the gui feature so it is only compiled
+# when the native GUI fallback path (open browser if WebView unavailable) is
+# included in the binary.
+gui = ["neuronprompter-web?/gui", "dep:opener"]
+# The mcp feature compiles in the MCP server for Claude integration.
+mcp = ["dep:neuronprompter-mcp"]
+
+[lints]
+workspace = true
+
+[dependencies]
+# Internal workspace crates
+neuronprompter-core = { workspace = true }
+neuronprompter-db = { workspace = true }
+neuronprompter-api = { workspace = true }
+neuronprompter-web = { workspace = true, optional = true }
+neuronprompter-mcp = { workspace = true, optional = true }
+neuronprompter-application = { workspace = true }
+
+# CLI argument parsing with derive macros
+clap = { workspace = true }
+
+# HTTP server framework
+axum = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+
+# Structured logging with environment-based level filtering
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# SQLite connection pooling
+r2d2 = { workspace = true }
+r2d2_sqlite = { workspace = true }
+
+# Cross-platform browser launcher, optional behind the gui feature for the
+# browser fallback path when the native WebView is not available
+opener = { workspace = true, optional = true }
+
+# JSON output
+serde_json = { workspace = true }
+
+# Cryptographic random number generation for shutdown token
+rand = { workspace = true }
+
+# winresource embeds the application icon (.ico) into the Windows executable
+# resource section via the build script. Replaces the deprecated winres crate.
+[target.'cfg(target_os = "windows")'.build-dependencies]
+winresource = "0.1"
+
+[dev-dependencies]
+tempfile = { workspace = true }

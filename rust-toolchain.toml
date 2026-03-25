@@ -1,0 +1,7 @@
+# Rust toolchain specification for the NeuronPrompter workspace.
+# resolver = "3" in Cargo.toml requires Rust 1.85 or later.
+# edition = "2024" requires Rust 1.85 or later.
+# Pinned to a specific version for reproducible builds across all developers.
+[toolchain]
+channel = "1.88.0"
+components = ["clippy", "rustfmt"]
