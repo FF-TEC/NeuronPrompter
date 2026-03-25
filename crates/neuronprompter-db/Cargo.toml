@@ -1,0 +1,21 @@
+[package]
+name = "neuronprompter-db"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "SQLite database layer with connection pooling, migrations, and repository implementations"
+
+[lints]
+workspace = true
+
+[dependencies]
+neuronprompter-core = { workspace = true }
+rusqlite = { workspace = true }
+r2d2 = { workspace = true }
+r2d2_sqlite = { workspace = true }
+chrono = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }

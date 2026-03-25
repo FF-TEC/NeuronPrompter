@@ -1,0 +1,28 @@
+[package]
+name = "neuronprompter-mcp"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "MCP (Model Context Protocol) server providing stdio-based JSON-RPC tool access to prompts"
+
+[lints]
+workspace = true
+
+[dependencies]
+neuronprompter-core = { workspace = true }
+neuronprompter-db = { workspace = true }
+neuronprompter-application = { workspace = true }
+# Pinned to an exact version because rmcp is pre-1.0 and minor releases may
+# contain breaking API changes. The "=" prefix ensures cargo resolves exactly
+# this version until an intentional manual bump.
+rmcp = { version = "=0.3", features = ["server", "transport-io"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true, features = ["io-std"] }
+
+[dev-dependencies]
+tempfile = { workspace = true }

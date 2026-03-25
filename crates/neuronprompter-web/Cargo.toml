@@ -1,0 +1,127 @@
+# neuronprompter-web: Browser-based web frontend server for the NeuronPrompter
+# application. Serves embedded static assets (SolidJS SPA) via axum, provides
+# Server-Sent Events (SSE) for real-time log/progress streaming, and additional
+# REST endpoints for model management, MCP registration, and Ollama operations.
+
+[package]
+name = "neuronprompter-web"
+description = "Browser-based web frontend server for the NeuronPrompter workspace"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[features]
+default = []
+# The gui feature compiles in tao (window management), wry (WebView embedding),
+# and platform-specific dependencies for the transparent splash screen and
+# native window icon rendering.
+gui = [
+    "dep:tao", "dep:wry", "dep:rfd",
+    "dep:windows",
+    "dep:objc2", "dep:objc2-app-kit", "dep:objc2-foundation",
+    "dep:gtk", "dep:cairo-rs",
+]
+
+[lints]
+workspace = true
+
+[dependencies]
+# Internal workspace crates
+neuronprompter-core = { workspace = true }
+neuronprompter-api = { workspace = true }
+neuronprompter-db = { workspace = true }
+neuronprompter-application = { workspace = true }
+neuronprompter-mcp = { workspace = true }
+
+# HTTP server framework
+axum = { workspace = true }
+
+# Async runtime for broadcast channels and SSE stream adapters
+tokio = { workspace = true }
+tokio-stream = { workspace = true }
+
+# Serialization for JSON responses
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Structured logging for the SSE broadcast tracing layer
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Embeds the compiled frontend assets into the binary at compile time
+rust-embed = { workspace = true }
+
+# MIME type detection for serving embedded static files
+mime_guess = { workspace = true }
+
+# Cross-platform "open URL in default browser"
+opener = { workspace = true }
+
+# HTTP client for Ollama proxy and update check
+reqwest = { workspace = true }
+
+# HTTP response types for SSE
+axum-extra = { workspace = true }
+
+# Tower HTTP layers for CORS and cache headers
+tower-http = { workspace = true }
+
+# Connection pooling for handler access to SQLite
+r2d2 = { workspace = true }
+r2d2_sqlite = { workspace = true }
+
+# URL parsing for SSRF protection in Ollama proxy
+url = { workspace = true }
+
+# Native OS window management -- optional, compiled only with the gui feature
+tao = { workspace = true, optional = true }
+
+# WebView embedding -- optional, compiled only with the gui feature
+wry = { workspace = true, optional = true }
+
+# Native file dialogs (save/open) -- optional, compiled only with the gui feature
+rfd = { version = "0.17", optional = true }
+
+# PNG decoding for the transparent splash screen image and window icon.
+# The splash PNG (960x360 RGBA) and icon PNG (256x256) are embedded via
+# include_bytes! and decoded at runtime to raw pixel data.
+image = { workspace = true }
+
+# --- Platform-specific dependencies for the transparent splash window ---
+#
+# The splash screen renders a pre-generated PNG with per-pixel alpha
+# transparency using native OS APIs (no WebView). Each platform requires
+# its own rendering API bindings.
+
+[target.'cfg(target_os = "windows")'.dependencies]
+# Win32 API bindings for GDI operations (UpdateLayeredWindow, CreateDIBSection)
+# and loading the multi-resolution ICO from exe resources (LoadImageW).
+windows = { version = "0.61", optional = true, features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_System_LibraryLoader",
+    "Win32_UI_WindowsAndMessaging",
+] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+# Objective-C runtime bindings for NSWindow, NSImageView, NSImage
+objc2 = { version = "0.6", optional = true }
+objc2-app-kit = { version = "0.3", optional = true, features = [
+    "NSImage", "NSImageView", "NSBitmapImageRep",
+    "NSView", "NSWindow", "NSColor", "NSGraphics",
+] }
+objc2-foundation = { version = "0.3", optional = true, features = ["NSData", "NSGeometry"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+# GTK and Cairo bindings for drawing the splash PNG onto a transparent GTK window.
+gtk = { version = "0.18", optional = true }
+cairo-rs = { version = "0.18", optional = true }
+# Runtime check for libwebkit2gtk via dlopen in preflight_gui_check()
+libc = "0.2"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tokio-util = { workspace = true }
+tempfile = { workspace = true }

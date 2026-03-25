@@ -1,0 +1,321 @@
+@startuml NeuronPrompter Data Model
+
+skinparam dpi 200
+skinparam linetype ortho
+skinparam padding 2
+skinparam roundCorner 6
+skinparam classAttributeIconSize 0
+skinparam defaultFontName "Helvetica Neue"
+skinparam defaultFontSize 11
+skinparam titleFontSize 20
+skinparam titleFontStyle bold
+skinparam shadowing false
+
+skinparam entity {
+  BackgroundColor White
+  BorderColor #94a3b8
+  FontColor #1e293b
+  AttributeFontColor #475569
+  AttributeFontSize 10
+  StereotypeFontColor #6366f1
+  StereotypeFontSize 9
+}
+
+skinparam arrow {
+  Color #94a3b8
+  FontColor #64748b
+  FontSize 9
+}
+
+hide circle
+hide methods
+
+title <b>NeuronPrompter</b> — Data Model\n<size:11><color:#64748b>0001_initial.sql · 21 tables · SQLite</color></size>
+
+' ==========================================================================
+' Users & Settings
+' ==========================================================================
+
+entity "users" as users <<core>> #eef2ff;line:6366f1 {
+  <b>id</b> : INTEGER <<PK>>
+  --
+  username : TEXT <<UNIQUE>>  //non-empty//
+  display_name : TEXT  //non-empty//
+  created_at : TEXT
+  updated_at : TEXT
+}
+
+entity "user_settings" as user_settings #eef2ff;line:6366f1 {
+  <b>user_id</b> : INTEGER <<PK, FK>>
+  --
+  theme : TEXT  //light|dark|system//
+  last_collection_id : INTEGER <<FK>>
+  sidebar_collapsed : INTEGER  //0|1//
+  sort_field : TEXT  //updated_at|created_at|title//
+  sort_direction : TEXT  //asc|desc//
+  ollama_base_url : TEXT
+  ollama_model : TEXT?
+  extra : TEXT  //json object//
+}
+
+entity "app_settings" as app_settings #f8fafc;line:94a3b8 {
+  <b>key</b> : TEXT <<PK>>
+  --
+  value : TEXT
+}
+
+' ==========================================================================
+' Taxonomy
+' ==========================================================================
+
+entity "tags" as tags #ecfdf5;line:10b981 {
+  <b>id</b> : INTEGER <<PK>>
+  --
+  user_id : INTEGER <<FK>>
+  name : TEXT <<NOCASE>>  //non-empty//
+  created_at : TEXT
+  ..
+  //UNIQUE(user_id, name)//
+}
+
+entity "categories" as categories #faf5ff;line:a855f7 {
+  <b>id</b> : INTEGER <<PK>>
+  --
+  user_id : INTEGER <<FK>>
+  name : TEXT <<NOCASE>>  //non-empty//
+  created_at : TEXT
+  ..
+  //UNIQUE(user_id, name)//
+}
+
+entity "collections" as collections #fffbeb;line:f59e0b {
+  <b>id</b> : INTEGER <<PK>>
+  --
+  user_id : INTEGER <<FK>>
+  name : TEXT <<NOCASE>>  //non-empty//
+  created_at : TEXT
+  ..
+  //UNIQUE(user_id, name)//
+}
+
+' ==========================================================================
+' Prompts
+' ==========================================================================
+
+entity "prompts" as prompts <<content>> #eff6ff;line:3b82f6 {
+  <b>id</b> : INTEGER <<PK>>
+  --
+  user_id : INTEGER <<FK CASCADE>>
+  title : TEXT  //non-empty//
+  content : TEXT
+  description : TEXT?
+  notes : TEXT?
+  language : TEXT?  //len <= 2//
+  is_favorite : INTEGER  //0|1//
+  is_archived : INTEGER  //0|1//
+  current_version : INTEGER  //>=1, default 1//
+  created_at : TEXT
+  updated_at : TEXT
+}
+
+entity "prompt_versions" as prompt_versions #eff6ff;line:93c5fd {
+  <b>id</b> : INTEGER <<PK>>
+  --
+  prompt_id : INTEGER <<FK CASCADE>>
+  version_number : INTEGER  //>=1//
+  title : TEXT
+  content : TEXT
+  description : TEXT?
+  notes : TEXT?
+  language : TEXT?  //len <= 2//
+  created_at : TEXT
+  ..
+  //UNIQUE(prompt_id, version_number)//
+}
+
+' ==========================================================================
+' Scripts
+' ==========================================================================
+
+entity "scripts" as scripts <<content>> #eff6ff;line:3b82f6 {
+  <b>id</b> : INTEGER <<PK>>
+  --
+  user_id : INTEGER <<FK CASCADE>>
+  title : TEXT  //non-empty//
+  content : TEXT
+  description : TEXT?
+  notes : TEXT?
+  script_language : TEXT  //len 1..30//
+  language : TEXT?  //len <= 2//
+  is_favorite : INTEGER  //0|1//
+  is_archived : INTEGER  //0|1//
+  current_version : INTEGER  //>=1, default 1//
+  source_path : TEXT?  //non-empty if set//
+  is_synced : INTEGER  //0|1//
+  created_at : TEXT
+  updated_at : TEXT
+}
+
+entity "script_versions" as script_versions #eff6ff;line:93c5fd {
+  <b>id</b> : INTEGER <<PK>>
+  --
+  script_id : INTEGER <<FK CASCADE>>
+  version_number : INTEGER  //>=1//
+  title : TEXT
+  content : TEXT
+  description : TEXT?
+  notes : TEXT?
+  script_language : TEXT  //len 1..30//
+  language : TEXT?  //len <= 2//
+  created_at : TEXT
+  ..
+  //UNIQUE(script_id, version_number)//
+}
+
+' ==========================================================================
+' Chains
+' ==========================================================================
+
+entity "chains" as chains <<content>> #eff6ff;line:3b82f6 {
+  <b>id</b> : INTEGER <<PK>>
+  --
+  user_id : INTEGER <<FK CASCADE>>
+  title : TEXT  //non-empty//
+  description : TEXT?
+  notes : TEXT?
+  language : TEXT?  //len <= 2//
+  separator : TEXT  //= '\\n\\n'//
+  is_favorite : INTEGER  //0|1//
+  is_archived : INTEGER  //0|1//
+  created_at : TEXT
+  updated_at : TEXT
+}
+
+entity "chain_steps" as chain_steps #fdf2f8;line:ec4899 {
+  <b>id</b> : INTEGER <<PK>>
+  --
+  chain_id : INTEGER <<FK CASCADE>>
+  step_type : TEXT  //'prompt'|'script'//
+  prompt_id : INTEGER? <<FK RESTRICT>>
+  script_id : INTEGER? <<FK RESTRICT>>
+  position : INTEGER  //>=0//
+  ..
+  //UNIQUE(chain_id, position)//
+  //CHECK: exactly one of//
+  //prompt_id or script_id//
+}
+
+' ==========================================================================
+' Junction Tables
+' ==========================================================================
+
+together {
+  entity "prompt_tags" as pt #f8fafc;line:cbd5e1 {
+    <b>prompt_id</b> · <b>tag_id</b>
+  }
+  entity "prompt_categories" as pcat #f8fafc;line:cbd5e1 {
+    <b>prompt_id</b> · <b>category_id</b>
+  }
+  entity "prompt_collections" as pcol #f8fafc;line:cbd5e1 {
+    <b>prompt_id</b> · <b>collection_id</b>
+  }
+}
+
+together {
+  entity "script_tags" as st #f8fafc;line:cbd5e1 {
+    <b>script_id</b> · <b>tag_id</b>
+  }
+  entity "script_categories" as scat #f8fafc;line:cbd5e1 {
+    <b>script_id</b> · <b>category_id</b>
+  }
+  entity "script_collections" as scol #f8fafc;line:cbd5e1 {
+    <b>script_id</b> · <b>collection_id</b>
+  }
+}
+
+together {
+  entity "chain_tags" as ct #f8fafc;line:cbd5e1 {
+    <b>chain_id</b> · <b>tag_id</b>
+  }
+  entity "chain_categories" as ccat #f8fafc;line:cbd5e1 {
+    <b>chain_id</b> · <b>category_id</b>
+  }
+  entity "chain_collections" as ccol #f8fafc;line:cbd5e1 {
+    <b>chain_id</b> · <b>collection_id</b>
+  }
+}
+
+' ==========================================================================
+' FTS5 Virtual Tables
+' ==========================================================================
+
+together {
+  entity "prompts_fts" as pfts <<FTS5>> #f0fdf4;line:22c55e {
+    title · content · description · notes
+  }
+  entity "scripts_fts" as sfts <<FTS5>> #f0fdf4;line:22c55e {
+    title · content · description · notes
+  }
+  entity "chains_fts" as cfts <<FTS5>> #f0fdf4;line:22c55e {
+    title · description · notes
+  }
+}
+
+' ==========================================================================
+' Relationships
+' ==========================================================================
+
+users ||--o{ prompts
+users ||--o{ scripts
+users ||--o{ chains
+users ||--o{ tags
+users ||--o{ categories
+users ||--o{ collections
+users ||--o| user_settings
+
+user_settings }o..o| collections : "  last_collection\n  (SET NULL)"
+
+prompts ||--o{ prompt_versions
+scripts ||--o{ script_versions
+
+chains ||--o{ chain_steps
+chain_steps }o..|| prompts : " RESTRICT"
+chain_steps }o..|| scripts : " RESTRICT"
+
+prompts ||--o{ pt
+tags ||--o{ pt
+prompts ||--o{ pcat
+categories ||--o{ pcat
+prompts ||--o{ pcol
+collections ||--o{ pcol
+
+scripts ||--o{ st
+tags ||--o{ st
+scripts ||--o{ scat
+categories ||--o{ scat
+scripts ||--o{ scol
+collections ||--o{ scol
+
+chains ||--o{ ct
+tags ||--o{ ct
+chains ||--o{ ccat
+categories ||--o{ ccat
+chains ||--o{ ccol
+collections ||--o{ ccol
+
+prompts ..> pfts : " trigger"
+scripts ..> sfts : " trigger"
+chains ..> cfts : " trigger"
+
+legend bottom left
+  |<#eef2ff>  | Users |
+  |<#eff6ff>  | Content |
+  |<#ecfdf5>  | Tags |
+  |<#faf5ff>  | Categories |
+  |<#fffbeb>  | Collections |
+  |<#fdf2f8>  | Steps |
+  |<#f8fafc>  | Junctions |
+  |<#f0fdf4>  | FTS5 |
+endlegend
+
+@enduml

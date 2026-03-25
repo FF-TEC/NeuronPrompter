@@ -1,0 +1,99 @@
+# =============================================================================
+# NeuronPrompter .gitignore
+# Covers LaTeX build artifacts, Rust toolchain output, frontend dependencies,
+# IDE configuration, and OS-generated metadata files.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# LaTeX intermediate and auxiliary files (PDF is kept intentionally)
+# -----------------------------------------------------------------------------
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+*.bbl
+*.blg
+*.nav
+*.snm
+*.vrb
+*.dvi
+*.ps
+*.run.xml
+*.bcf
+*.idx
+*.ilg
+*.ind
+*.xdv
+
+# -----------------------------------------------------------------------------
+# Rust build artifacts
+# -----------------------------------------------------------------------------
+/target/
+**/*.rs.bk
+
+# -----------------------------------------------------------------------------
+# Frontend build artifacts and dependencies
+# -----------------------------------------------------------------------------
+node_modules/
+dist/
+build/
+.svelte-kit/
+.vite/
+
+# -----------------------------------------------------------------------------
+# IDE and editor configuration
+# -----------------------------------------------------------------------------
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# -----------------------------------------------------------------------------
+# Operating system metadata
+# -----------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# -----------------------------------------------------------------------------
+# Environment and secrets (must never be committed)
+# -----------------------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+*.pem
+*.key
+*.secret
+*.p12
+*.pfx
+
+# Python bytecode cache
+__pycache__/
+*.pyc
+*.pyo
+
+# -----------------------------------------------------------------------------
+# SQLite database files from local development
+# -----------------------------------------------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+
+# -----------------------------------------------------------------------------
+# Local Cargo configuration overrides
+# -----------------------------------------------------------------------------
+.cargo/

@@ -1,0 +1,47 @@
+{
+  // ---------------------------------------------------------------------------
+  // Rust-Analyzer: use the real compiler (clippy) instead of the built-in
+  // analysis engine.  This guarantees that IDE diagnostics match the
+  // pre-commit hook output exactly.
+  // ---------------------------------------------------------------------------
+  "rust-analyzer.check.command": "clippy",
+  "rust-analyzer.check.extraArgs": [
+    "--workspace",
+    "--all-targets",
+    "--",
+    "-D",
+    "warnings"
+  ],
+
+  // Run clippy on save so diagnostics stay fresh without manual restarts.
+  "rust-analyzer.checkOnSave": true,
+
+  // Show clippy hints and info-level diagnostics in the editor.
+  "rust-analyzer.diagnostics.disabled": [],
+  "rust-analyzer.diagnostics.severity.overrides": {},
+
+  // Cargo settings — match the workspace layout.
+  "rust-analyzer.cargo.features": "all",
+  "rust-analyzer.cargo.buildScripts.enable": true,
+  "rust-analyzer.procMacro.enable": true,
+
+  // ---------------------------------------------------------------------------
+  // Frontend: SolidJS + TypeScript
+  // ---------------------------------------------------------------------------
+  "typescript.tsdk": "crates/neuronprompter-web/frontend/node_modules/typescript/lib",
+
+  // ---------------------------------------------------------------------------
+  // Editor defaults for this workspace
+  // ---------------------------------------------------------------------------
+  "editor.formatOnSave": true,
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    "editor.formatOnSave": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  }
+}

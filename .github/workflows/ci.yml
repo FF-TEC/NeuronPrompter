@@ -1,0 +1,98 @@
+name: CI
+on:
+  push:
+    branches: [master]
+  pull_request:
+jobs:
+  rust:
+    # Runs Rust formatting, linting, and tests on both Linux and Windows to
+    # catch platform-specific compilation errors (e.g. winresource, path
+    # separators, platform-conditional code).
+    env:
+      RUSTFLAGS: "-D warnings"
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Install WebKit2GTK build dependencies (Linux only)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: crates/neuronprompter-web/frontend/package-lock.json
+      - name: Build frontend (required for neuronprompter-web asset embedding)
+        run: cd crates/neuronprompter-web/frontend && npm ci && npm run build
+      - run: cargo fmt --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: crates/neuronprompter-web/frontend
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: crates/neuronprompter-web/frontend/package-lock.json
+      - run: npm ci
+      # Non-blocking: surfaces known vulnerabilities without failing CI.
+      # Critical-only threshold avoids noise from low-severity advisories
+      # with no available fix.
+      - name: Audit dependencies
+        run: npm audit --audit-level=critical || true
+      - run: npm run lint
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+  deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: EmbarkStudios/cargo-deny-action@v2
+  # Full integration build that depends on both the Rust and frontend jobs
+  # passing. Builds the frontend first, then compiles the release binary
+  # with embedded assets to verify the complete artifact is producible.
+  integration:
+    needs: [rust, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Install WebKit2GTK build dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: crates/neuronprompter-web/frontend/package-lock.json
+      - name: Build frontend
+        run: cd crates/neuronprompter-web/frontend && npm ci && npm run build
+      - name: Build release binary
+        run: cargo build --release
+      - name: Verify documentation builds without warnings
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+        run: cargo doc --workspace --no-deps
